@@ -1,0 +1,8 @@
+.app {
+  text-align: center;
+}
+.initialized_progress__app {
+  display: flex;
+  justify-content: center;
+  margin: 10px 0;
+}

@@ -1,0 +1,23 @@
+.main__card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.title_main__card {
+    text-align: center;
+    color: darkgoldenrod;
+}
+
+.desc_main__card {
+    font-weight: bold;
+    display: flex;
+    flex-direction: column;
+    text-align: start;
+}
+
+.go_back_button__main___card {
+    text-decoration: none;
+    color: red;
+    font-weight: bold;
+}
