@@ -13,13 +13,13 @@ const createChannel = () => {
     })
 }
 
- const deleteTicker = (tickerTitle: string) => {
+const deleteTicker = (tickerTitle: string) => {
     socket.emit("deletedTicker", tickerTitle)
 }
- const addTicker = (tickerTitle: string) => {
+const addTicker = (tickerTitle: string) => {
     socket.emit("addedTicker", tickerTitle)
 }
- const changeInterval = (sec: string) => {
+const changeInterval = (sec: string) => {
     socket.emit("setInterval", sec)
 }
 
@@ -31,14 +31,14 @@ export const getDataApi = {
     subscribeNewData(callback: SubscriberType) {
         subscribers.push(callback)
     },
-    delTicker(ticker:string) {
+    delTicker(ticker: string) {
         deleteTicker(ticker)
     },
-    addTicker(ticker: string){
+    addTicker(ticker: string) {
         addTicker(ticker)
     },
-    changeInterval(seconds: string){
-      changeInterval(seconds)
+    changeInterval(seconds: string) {
+        changeInterval(seconds)
     },
     start() {
         createChannel()

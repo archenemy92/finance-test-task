@@ -1,5 +1,6 @@
 import React from "react"
 import {ChangeEvent} from "react"
+import {KeyboardEvent} from "react"
 import {useEffect} from "react"
 import {useState} from "react"
 import {useDispatch} from "react-redux"
@@ -10,7 +11,7 @@ import {FinanceCard} from "./FinanceCard/FinanceCard"
 import {Box} from "@material-ui/core"
 import {IconButton} from "@material-ui/core"
 import {TextField} from "@material-ui/core"
-import {addTicker} from "../../bll/financeDataReducer"
+import {addTicker, setIntervalUpdate} from "../../bll/financeDataReducer"
 import {changeInterval} from "../../bll/financeDataReducer"
 import {deleteTick} from "../../bll/financeDataReducer"
 import {setIsFetching} from "../../bll/financeDataReducer"
@@ -21,21 +22,41 @@ import {LinearProgress} from "@mui/material"
 import {Paper} from "@mui/material"
 import style from "./Main.module.css"
 
+export type DisabledType = "delete" | "timeout" | "unDisabled"
+
 export const Main: React.FC = () => {
     let tickers = useSelector<AppStateType, TickersDataType[]>(state => state.finance.data)
     let isFetching = useSelector<AppStateType, boolean>(state => state.finance.isFetchData)
+    let interval = useSelector<AppStateType, string>(state => state.finance.interval)
     let [inputValue, setInputValue] = useState<string>("")
     let [valueInterval, setValueInterval] = useState<string>("1")
     let [error, setError] = useState<string>("")
-    let [disabled, setDisabled] = useState<boolean>(false)
-
+    let [errorTimeout, setErrorTimeout] = useState<string>("")
+    let [disabled, setDisabled] = useState<DisabledType>("unDisabled")
     const dispatch = useDispatch()
+
+    let disable = isFetching || !!errorTimeout ||interval === valueInterval
 
     let filterTickerHandler = (ticker: string) => {
         dispatch(deleteTick(ticker))
     }
+    let onKeyDownHandler = (e: KeyboardEvent<HTMLInputElement>) =>{
+        ["e", "E", "+", "-", ".",  ","].includes(e.key) && e.preventDefault()
+    }
+
     let onChangeValueIntervalHandler = (e: ChangeEvent<HTMLInputElement>) => {
+        if (e.currentTarget.value.length > 1){
+            setErrorTimeout("no more than one symbol")
+        }
+        else {
+            setErrorTimeout("")
+        }
         setValueInterval(e.currentTarget.value)
+    }
+    let setIntervalHandler = () => {
+        setValueInterval(valueInterval)
+        dispatch(setIntervalUpdate(valueInterval))
+        dispatch(changeInterval(valueInterval))
     }
     let onChangeHandler = (e: ChangeEvent<HTMLInputElement>) => {
         setInputValue(e.currentTarget.value)
@@ -45,8 +66,14 @@ export const Main: React.FC = () => {
         let isSameTicker = tickers.some(t => t.ticker === inputValue.toUpperCase())
         if (isSameTicker) {
             setError("The ticker has already been created")
+            return
         }
-        dispatch(addTicker(inputValue.toUpperCase()))
+        if (inputValue.trim() === "") {
+            setError("please, input ticker")
+            return
+        }
+        dispatch(addTicker(inputValue.toUpperCase(), valueInterval))
+        setInputValue("")
 
     }
     let onKeyPressHandler = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -57,25 +84,22 @@ export const Main: React.FC = () => {
             addTickerHandler()
         }
     }
-    let changeIntervalHandler = () => {
-        dispatch(changeInterval(valueInterval))
-    }
 
     useEffect(() => {
-        let tick = localStorage.getItem("data")
-        if (!tick) {
-            tick = JSON.stringify(tickers)
+        let ticker = localStorage.getItem("data")
+        if (!ticker) {
+            ticker = JSON.stringify(tickers)
         }
-        let arr
-        if (tick) {
-            arr = JSON.parse(tick)
+        let neArrTicker
+        if (ticker) {
+            neArrTicker = JSON.parse(ticker)
         }
 
-        if (arr.length !== tickers.length) {
-            setDisabled(true)
+        if (neArrTicker.length !== tickers.length) {
+            setDisabled("delete")
             dispatch(setIsFetching(true))
         } else {
-            setDisabled(false)
+            setDisabled("unDisabled")
             dispatch(setIsFetching(false))
         }
 
@@ -95,14 +119,16 @@ export const Main: React.FC = () => {
             <div className={style.inputsFields__main}>
                 <div>
                     <TextField
-                        inputProps={{max: "6", min: "1"}}
-                        error={valueInterval === "6"}
-                        label={valueInterval === "6" ? "max value" : "timeout"}
+                        inputProps={{max: "5", min: "1"}}
+                        label={valueInterval === "5" ? "max value" : "timeout"}
+                        error={!!errorTimeout}
+                        helperText={errorTimeout}
                         type={"number"}
                         size={"small"}
                         value={valueInterval}
-                        onChange={onChangeValueIntervalHandler}/>
-                    <IconButton color={"primary"} onClick={changeIntervalHandler}>
+                        onChange={onChangeValueIntervalHandler}
+                        onKeyDown={onKeyDownHandler}/>
+                    <IconButton color={"primary"} onClick={setIntervalHandler} disabled={disable}>
                         <CheckIcon/>
                     </IconButton>
                 </div>
@@ -115,7 +141,7 @@ export const Main: React.FC = () => {
                         onChange={onChangeHandler}
                         onKeyPress={onKeyPressHandler}/>
                     <IconButton
-                        color={"success"} onClick={addTickerHandler} disabled={!!error}>
+                        color={"success"} onClick={addTickerHandler} disabled={!!error || isFetching}>
                         <AddIcon/>
                     </IconButton>
                 </div>

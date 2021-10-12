@@ -8,10 +8,11 @@ import style from "./FinanceCard.module.css"
 import {NavLink} from "react-router-dom"
 import {useDispatch} from "react-redux"
 import {setTickerTitle} from "../../../bll/financeDataReducer"
+import {DisabledType} from "../Main"
 
 type FinanceCardPropsType = TickersDataType & {
     filter: (ticker: string) => void
-    disabled: boolean
+    disabled: DisabledType
 }
 
 export const FinanceCard: React.FC<FinanceCardPropsType> = (props) => {
@@ -70,7 +71,7 @@ export const FinanceCard: React.FC<FinanceCardPropsType> = (props) => {
                     size={"small"}
                     color={"warning"}
                     onClick={filterTicker}
-                    disabled={props.disabled}>
+                    disabled={props.disabled === "delete"}>
                     <DeleteIcon/>
                 </IconButton>
             </div>

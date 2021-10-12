@@ -32,7 +32,8 @@ let startState: FinanceDataReducerStateType = {
             yield: "0.39"
         }
     ],
-    isFetchData: false
+    isFetchData: false,
+    ticker:""
 }
 
 test("Correct tickers will be set into state", () => {

@@ -6,23 +6,27 @@ export type FinanceDataReducerStateType = {
     data: TickersDataType[]
     isFetchData: boolean
     ticker: string
+    interval: string
 }
 export type DataReceivedActionType = ReturnType<typeof dataReceived>
 export type DeleteTickerActionType = ReturnType<typeof deleteTicker>
 export type SetIsFetchingActionType = ReturnType<typeof setIsFetching>
 export type SetTickerTitleActionType = ReturnType<typeof setTickerTitle>
+export type SetIntervalUpdateActionType = ReturnType<typeof setIntervalUpdate>
 
 export type FinanceReducerActionTypes =
     DataReceivedActionType
     | DeleteTickerActionType
     | SetIsFetchingActionType
     | SetTickerTitleActionType
+    | SetIntervalUpdateActionType
 
 
 const initState: FinanceDataReducerStateType = {
     isFetchData: false,
     data: [],
-    ticker: ""
+    ticker: "",
+    interval: "5"
 }
 
 export const financeDataReducer = (state = initState, action: FinanceReducerActionTypes) => {
@@ -57,6 +61,11 @@ export const financeDataReducer = (state = initState, action: FinanceReducerActi
                 ...state,
                 ticker: action.title
             }
+        case "SET_INTERVAL_UPDATE___FINANCE-REDUCER":
+            return {
+                ...state,
+                interval: action.interval
+            }
         default:
             return state
     }
@@ -88,10 +97,16 @@ export const setTickerTitle = (title: string) => {
         title
     } as const
 }
+export const setIntervalUpdate = (interval: string) => {
+    return {
+        type: "SET_INTERVAL_UPDATE___FINANCE-REDUCER",
+        interval
+    } as const
+}
 
 let _dataHandler: ((data: TickersDataType[]) => void) | null = null
 
-export const dataHandler = (dispatch: Dispatch) => {
+ const dataHandler = (dispatch: Dispatch) => {
     if (_dataHandler === null) {
         _dataHandler = (data: TickersDataType[]) => {
             dispatch(dataReceived(data))
@@ -112,13 +127,19 @@ export const deleteTick = (tickerTitle: string): ThunkType =>
         dispatch(deleteTicker(tickerTitle))
     }
 
-export const addTicker = (tickerTitle: string): ThunkType => async (dispatch) => {
+export const addTicker = (tickerTitle: string, interval: string): ThunkType => async (dispatch) => {
+    let sec = interval + "000"
+    dispatch(setIsFetching(true))
+    getDataApi.addTicker(tickerTitle)
+    //imitate delay for disabled send button
+    setTimeout(() => {
+        dispatch(setIsFetching(false))
+    }, +sec)
 
-    await getDataApi.addTicker(tickerTitle)
 }
 export const changeInterval = (sec: string): ThunkType => async () => {
     getDataApi.changeInterval(sec)
 }
-export const deleteChannel = () => async () => {
+export const deleteChannel = (): ThunkType => async () => {
     getDataApi.stop()
 }
